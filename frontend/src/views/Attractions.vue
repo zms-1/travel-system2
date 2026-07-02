@@ -1,14 +1,10 @@
 <template>
   <div class="page">
     <nav class="nav">
-      <div class="nav-brand" @click="$router.push('/home')">🏞️ 旅游管理系统</div>
+      <div class="nav-brand" @click="$router.push('/home')">🏞️ 旅游景点管理系统</div>
       <div class="nav-links">
         <router-link to="/home">首页</router-link>
         <router-link to="/attractions" class="active">景点管理</router-link>
-      </div>
-      <div class="nav-user">
-        <span>👤 {{ username }}</span>
-        <button @click="logout">退出</button>
       </div>
     </nav>
 
@@ -153,7 +149,6 @@ export default {
   data() {
     return {
       list: [], total: 0, page: 1, pageSize: 12, loading: false, error: '',
-      categories: [], username: localStorage.getItem('username') || '用户',
       search: { keyword: '', category: '' },
       dialogVisible: false, detailVisible: false, isEdit: false, submitting: false, uploading: false,
       form: { id: null, name: '', category: '', city: '', price: 0, rating: 0, description: '', cover_image: '' },
@@ -205,7 +200,6 @@ export default {
       } catch (err) { alert('操作失败'); } finally { this.submitting = false; }
     },
     async deleteItem(id) { if (confirm('确定删除？')) { try { await axios.delete(`/api/attractions/${id}`); alert('删除成功'); this.loadData(); } catch (err) { alert('删除失败'); } } },
-    logout() { localStorage.clear(); this.$router.push('/login'); },
     imgError(e) { e.target.src = 'https://via.placeholder.com/300x200?text=图片加载失败'; }
   }
 };
@@ -219,8 +213,6 @@ export default {
 .nav-links { display: flex; gap: 20px; }
 .nav-links a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; }
 .nav-links a.active { background: rgba(255,255,255,0.2); }
-.nav-user { display: flex; align-items: center; gap: 15px; }
-.nav-user button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
 .btn-add { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }

@@ -3,17 +3,12 @@
     <div class="nav-container">
       <div class="logo" @click="$router.push('/home')">
         <span>🏞️</span>
-        <span>旅游管理系统</span>
+        <span>旅游景点管理系统</span>
       </div>
-      
+
       <div class="nav-links">
         <router-link to="/home" class="nav-link">首页</router-link>
         <router-link to="/attractions" class="nav-link">景点管理</router-link>
-      </div>
-      
-      <div class="user-info">
-        <span class="username">👤 {{ username }}</span>
-        <button class="logout-btn" @click="logout">退出登录</button>
       </div>
     </div>
   </nav>
@@ -21,19 +16,7 @@
 
 <script>
 export default {
-  name: 'Navbar',
-  data() {
-    return {
-      username: localStorage.getItem('username') || '用户'
-    }
-  },
-  methods: {
-    logout() {
-      localStorage.removeItem('token')
-      localStorage.removeItem('username')
-      this.$router.push('/login')
-    }
-  }
+  name: 'Navbar'
 }
 </script>
 
@@ -88,30 +71,6 @@ export default {
 }
 
 .nav-link.router-link-active {
-  background: rgba(255,255,255,0.3);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.username {
-  font-size: 14px;
-}
-
-.logout-btn {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.logout-btn:hover {
   background: rgba(255,255,255,0.3);
 }
 </style>

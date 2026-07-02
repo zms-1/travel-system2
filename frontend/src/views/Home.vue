@@ -11,10 +11,6 @@
           <router-link to="/home" class="active">首页</router-link>
           <router-link to="/attractions">景点管理</router-link>
         </div>
-        <div class="user-info">
-          <span class="username">👤 {{ username }}</span>
-          <button class="logout-btn" @click="logout">退出登录</button>
-        </div>
       </div>
     </nav>
 
@@ -112,7 +108,6 @@ export default {
   name: 'Home',
   data() {
     return {
-      username: localStorage.getItem('username') || '用户',
       hotSpots: []
     };
   },
@@ -132,11 +127,6 @@ export default {
     },
     goToAttractions() {
       this.$router.push('/attractions');
-    },
-    logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      this.$router.push('/login');
     },
     imgError(e) {
       e.target.src = 'https://via.placeholder.com/400x250?text=图片加载中';
@@ -202,31 +192,6 @@ export default {
 .nav-links a:hover,
 .nav-links a.active {
   background: rgba(255,255,255,0.2);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.username {
-  color: white;
-  font-size: 14px;
-}
-
-.logout-btn {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: white;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.logout-btn:hover {
-  background: rgba(255,255,255,0.3);
 }
 
 /* 英雄区域 */
@@ -505,9 +470,6 @@ export default {
   }
   .nav-links {
     gap: 10px;
-  }
-  .username {
-    display: none;
   }
 }
 </style>
