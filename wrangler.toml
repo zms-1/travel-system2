@@ -3,3 +3,6 @@ pages_build_output_dir = "frontend/dist"
 
 [vars]
 NODE_VERSION = "20"
+
+[build]
+command = "cd frontend && npm install && npm run build"
