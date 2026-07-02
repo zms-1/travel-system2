@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { attractions } from '../data/attractions.js';
 
 export default {
   name: 'Home',
@@ -112,19 +112,10 @@ export default {
     };
   },
   mounted() {
-    this.loadHotSpots();
+    // 取评分最高的6个作为热门推荐
+    this.hotSpots = [...attractions].sort((a, b) => b.rating - a.rating).slice(0, 6);
   },
   methods: {
-    async loadHotSpots() {
-      try {
-        const res = await axios.get('/api/attractions', { params: { page: 1, pageSize: 6 } });
-        if (res.data.success) {
-          this.hotSpots = res.data.list;
-        }
-      } catch (err) {
-        console.error('加载热门景点失败:', err);
-      }
-    },
     goToAttractions() {
       this.$router.push('/attractions');
     },

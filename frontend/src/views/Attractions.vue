@@ -43,7 +43,7 @@
             <div class="price">¥{{ item.price }}</div>
             <div class="rating">⭐ {{ item.rating }} / 5.0</div>
             <div class="actions">
-              <button class="detail" @click="viewDetail(item.id)">详情</button>
+              <button class="detail" @click="viewDetail(item)">详情</button>
               <button class="edit" @click="openEdit(item)">编辑</button>
               <button class="delete" @click="deleteItem(item.id)">删除</button>
             </div>
@@ -114,7 +114,7 @@
         </div>
         <div class="modal-footer">
           <button @click="dialogVisible = false">取消</button>
-          <button class="submit" @click="submitForm" :disabled="submitting">{{ submitting ? '保存中...' : '保存' }}</button>
+          <button class="submit" @click="submitForm">{{ isEdit ? '保存' : '添加' }}</button>
         </div>
       </div>
     </div>
@@ -142,65 +142,124 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { attractions } from '../data/attractions.js';
 
 export default {
   name: 'Attractions',
   data() {
     return {
-      list: [], total: 0, page: 1, pageSize: 12, loading: false, error: '',
+      list: [],
+      total: 0,
+      page: 1,
+      pageSize: 12,
+      loading: false,
+      error: '',
+      categories: [],
       search: { keyword: '', category: '' },
-      dialogVisible: false, detailVisible: false, isEdit: false, submitting: false, uploading: false,
+      dialogVisible: false,
+      detailVisible: false,
+      isEdit: false,
+      submitting: false,
+      uploading: false,
       form: { id: null, name: '', category: '', city: '', price: 0, rating: 0, description: '', cover_image: '' },
       detail: null
     };
   },
-  computed: { totalPages() { return Math.ceil(this.total / this.pageSize); } },
-  mounted() { this.loadCategories(); this.loadData(); },
+  computed: {
+    totalPages() { return Math.ceil(this.total / this.pageSize); }
+  },
+  mounted() {
+    // 从静态数据初始化
+    this.list = [...attractions];
+    this.total = attractions.length;
+    this.categories = [...new Set(attractions.map(a => a.category))];
+  },
   methods: {
-    async loadData() {
+    loadData() {
       this.loading = true;
       try {
-        const res = await axios.get('/api/attractions', { params: { page: this.page, pageSize: this.pageSize, ...this.search } });
-        if (res.data.success) { this.list = res.data.list; this.total = res.data.total; }
-      } catch (err) { this.error = '加载失败'; }
-      finally { this.loading = false; }
+        let filtered = [...attractions];
+        // 搜索过滤
+        if (this.search.keyword) {
+          filtered = filtered.filter(a => a.name.includes(this.search.keyword));
+        }
+        if (this.search.category) {
+          filtered = filtered.filter(a => a.category === this.search.category);
+        }
+        this.total = filtered.length;
+        const start = (this.page - 1) * this.pageSize;
+        this.list = filtered.slice(start, start + this.pageSize);
+      } catch (err) {
+        this.error = '加载失败';
+      } finally {
+        this.loading = false;
+      }
     },
-    async loadCategories() {
-      try { const res = await axios.get('/api/categories'); if (res.data.success) this.categories = res.data.data; } 
-      catch (err) { console.error(err); }
+    resetSearch() {
+      this.search = { keyword: '', category: '' };
+      this.page = 1;
+      this.loadData();
     },
-    resetSearch() { this.search = { keyword: '', category: '' }; this.page = 1; this.loadData(); },
-    prevPage() { if (this.page > 1) { this.page--; this.loadData(); } },
-    nextPage() { if (this.page < this.totalPages) { this.page++; this.loadData(); } },
-    changePageSize() { this.page = 1; this.loadData(); },
-    openAdd() { this.isEdit = false; this.form = { id: null, name: '', category: '', city: '', price: 0, rating: 0, description: '', cover_image: '' }; this.dialogVisible = true; },
-    openEdit(item) { this.isEdit = true; this.form = { ...item }; this.dialogVisible = true; },
-    async viewDetail(id) { try { const res = await axios.get(`/api/attractions/${id}`); if (res.data.success) { this.detail = res.data.data; this.detailVisible = true; } } catch (err) { alert('获取详情失败'); } },
-    async handleFileUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) return alert('请选择图片');
-      if (file.size > 5 * 1024 * 1024) return alert('图片不能超过5MB');
-      this.uploading = true;
-      const fd = new FormData(); fd.append('image', file);
-      try { const res = await axios.post('/api/upload', fd); if (res.data.success) this.form.cover_image = res.data.imageUrl; } 
-      catch (err) { alert('上传失败'); } finally { this.uploading = false; }
+    prevPage() {
+      if (this.page > 1) { this.page--; this.loadData(); }
     },
-    async submitForm() {
-      if (!this.form.name || !this.form.category || !this.form.city) return alert('请填写必填项');
-      this.submitting = true;
-      try {
-        const fd = new FormData();
-        Object.keys(this.form).forEach(k => { if (this.form[k] !== null) fd.append(k, this.form[k]); });
-        if (this.isEdit) await axios.put(`/api/attractions/${this.form.id}`, fd);
-        else await axios.post('/api/attractions', fd);
-        alert(this.isEdit ? '修改成功' : '添加成功');
-        this.dialogVisible = false; this.loadData();
-      } catch (err) { alert('操作失败'); } finally { this.submitting = false; }
+    nextPage() {
+      if (this.page < this.totalPages) { this.page++; this.loadData(); }
     },
-    async deleteItem(id) { if (confirm('确定删除？')) { try { await axios.delete(`/api/attractions/${id}`); alert('删除成功'); this.loadData(); } catch (err) { alert('删除失败'); } } },
-    imgError(e) { e.target.src = 'https://via.placeholder.com/300x200?text=图片加载失败'; }
+    changePageSize() {
+      this.page = 1;
+      this.loadData();
+    },
+    openAdd() {
+      this.isEdit = false;
+      this.form = { id: null, name: '', category: '', city: '', price: 0, rating: 0, description: '', cover_image: '' };
+      this.dialogVisible = true;
+    },
+    openEdit(item) {
+      this.isEdit = true;
+      this.form = { ...item };
+      this.dialogVisible = true;
+    },
+    viewDetail(item) {
+      this.detail = item;
+      this.detailVisible = true;
+    },
+    submitForm() {
+      if (!this.form.name || !this.form.category || !this.form.city) {
+        return alert('请填写必填项');
+      }
+      if (this.isEdit) {
+        const idx = attractions.findIndex(a => a.id === this.form.id);
+        if (idx !== -1) {
+          attractions[idx] = { ...this.form };
+        }
+      } else {
+        const newId = Math.max(...attractions.map(a => a.id)) + 1;
+        attractions.push({ ...this.form, id: newId });
+      }
+      alert(this.isEdit ? '修改成功' : '添加成功');
+      this.dialogVisible = false;
+      this.loadData();
+    },
+    deleteItem(id) {
+      if (confirm('确定删除？')) {
+        const idx = attractions.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          attractions.splice(idx, 1);
+        }
+        alert('删除成功');
+        this.loadData();
+      }
+    },
+    imgError(e) {
+      e.target.src = 'https://via.placeholder.com/300x200?text=图片加载失败';
+    }
+  },
+  watch: {
+    page() { this.loadData(); },
+    pageSize() { this.loadData(); },
+    'search.keyword'() { this.page = 1; this.loadData(); },
+    'search.category'() { this.page = 1; this.loadData(); }
   }
 };
 </script>
